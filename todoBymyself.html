@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>todo by lili</title>
+        <style media="screen">
+            *{
+                margin: 0;
+                padding: 0;
+            }
+
+            body{
+                background: #cdcdcd;
+                font-size: 20px;
+                min-width: 300px;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .todo-main{
+                background: #323232;
+                text-align: center;
+                height: 50px;
+                border-radius: 8px;
+            }
+            .done{
+                color: red;
+                text-decoration:line-through;
+            }
+            .todoFrom{
+                font-size: 20px;
+            }
+            .classHeader{
+                color:#ddd;
+                font-size: 26px;
+                font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+                line-height: 50px;
+                margin-right: 6%;
+            }
+            .class-input{
+                max-width: 300px;
+                height: 26px;
+                top: -2px;
+                position: relative;
+                line-height: 20px;
+                border-radius: 4px;
+                border: none;
+                text-indent: 10px;
+                margin-right: 6%;
+                font-size: 18px;
+            }
+            .class-add {
+                position: relative;
+                top: -2px;
+                width: 60px;
+                font-size: 16px;
+                border-radius: 16px;
+                outline: none;
+                background: #588;
+            }
+            .classTime{
+                color: #887;
+            }
+            .todo-done,.todo-delete{
+                font-size: 18px;
+                background: #588;
+                width: 60px;
+                border-radius: 12px;
+                outline: none;
+                cursor: pointer;
+            }
+            .class-span{
+                background: #eee;
+                margin: 8px 0;
+                border-radius: 8px;
+                height: 30px;
+                line-height: 30px;
+            }
+            .classTime{
+                font-size: 16px;
+            }
+            #footer{
+                position: relative;
+                top: 10px;
+                font-size: 14px;
+                color: #888;
+            }
+            .clearAll{
+                color: red;
+                font-weight: 600;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            @media all and (max-width: 479px){
+                #id-container{
+                    font-size: 14px;
+                }
+                .class-input{
+                    width: 120px;
+                    font-size: 14px;
+                }
+                .classHeader{
+                    color:#ddd;
+                    font-size: 20px;
+                    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+                    line-height: 50px;
+                    margin-right: 4%;
+                }
+                .class-add, .todo-done, .todo-delete {
+                    width: 40px;
+                    font-size: 12px;
+                    border-radius: 14px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="todo-main">
+            <!-- todo输入框 -->
+            <div class="todoFrom">
+                <span class="classHeader">ToDoList</span>
+                <input class='class-input' type="text" value="" placeholder="添加ToDo">
+                <button class='class-add' type="button" name="button">ADD</button>
+            </div>
+            <!-- todo列表 -->
+            <div id="id-container">
+            </div>
+            <footer id='footer'>
+                Copyright by Ali #2016 todolist.cn&nbsp<a class="clearAll">ClearAll</a>
+            </footer>
+        </div>
+    </body>
+    <script src='http://cdn.bootcss.com/jquery/3.1.1/jquery.min.js'></script>
+    <script type="text/javascript">
+        var todoList = []
+        // 添加新的todo
+        $('.class-add').on('click', function() {
+            var task = $('.class-input').val()
+
+            if (task == '') {
+
+            }else {
+                var todo = {
+                    'task': task,
+                    'time': currentTime(),
+                }
+                todoList.push(todo)
+                saveTodos()        //保存todos
+                insertTodo(todo)   // console.log('添加todos')
+                $('.class-input').val('')  //清空input里输入的内容
+            }
+        })
+        var tempTodo = function(todo) {
+            var t = `
+                <div class='todoCell'>
+                    <p class="class-span" contenteditable='true'>${todo.task}</p>
+                    <button class="todo-done" type="button" >完成</button>
+                    <span class="classTime">创建于:${todo.time}</span>
+                    <button class="todo-delete" type="button" >删除</button>
+                </div>
+            `
+            return t
+        }
+
+        var insertTodo = function(todo) {
+            $('#id-container').prepend(tempTodo(todo))
+        }
+
+        // 给完成，删除按钮加对应的功能，事件委托
+        $('#id-container').on('click', '.todo-done', function(e){
+            var button = $(e.target)
+            console.log('点击完成')
+            var p = button.closest('.todoCell').find('p')  //应用事件冒泡
+            p.toggleClass('done')
+        })
+
+        $('#id-container').on('click', '.todo-delete', function(event){
+            // var b = $(event.target)
+            var b = event.target
+            console.log('点击删除')
+            //更新todoList
+            var length = $('.todoCell').length
+            var index = $('.todoCell').index($(b).parent())
+            var i = length - index - 1
+            console.log('i=', i)
+            todoList. splice(i, 1)   //删除第 i 个todos
+            saveTodos()             //保存
+            $(b).closest('.todoCell').remove()
+        })
+
+        // 阻止回车换行
+        $('#id-container').on('keydown', '.class-span', function(event){
+            var target = event.target
+            if (event.which === 13) {
+                target.blur()
+                event.preventDefault()
+                document.querySelector('.class-input').focus()
+                //这个强制焦点回到input，回车就失去作用了
+            }
+        })
+
+        var saveTodos = function() {
+            var s = JSON.stringify(todoList)
+            localStorage.todoList = s
+        }
+        var loadTodos = function() {
+            var s = localStorage.todoList
+            return JSON.parse(s)
+        }
+
+        // 时间函数
+        var currentTime = function(z){
+            if (z === undefined) { z = new Date() }
+                var x = z.toString()
+                var zh     = '天一二三四五六'
+                var Year   = x.slice(10,15)
+                var Month  = z.getMonth() + 1
+                var Day    = x.slice(8,10)
+                var Hour   = x.slice(16,18)
+                var Minute = x.slice(19,21)
+                var Second = x.slice(22,24)
+                var Week   = zh[ z.getDay() ]
+                if ( String(Month).length === 1) {
+                    Month = '0' + Month
+            }
+            return `${Year}/${Month}/${Day}/ ${Hour}:${Minute} 星期${Week}`
+        }
+
+        // 加载todoList到页面中
+        todoList = loadTodos()
+        for (var i = 0; i < todoList.length; i++) {
+            var todo = todoList[i]
+            insertTodo(todo)
+        }
+
+        // 清除所有
+        $('.clearAll').on('click', function(){
+            localStorage.clear()
+            $('.todoCell').remove()
+        })
+    </script>
+</html>
